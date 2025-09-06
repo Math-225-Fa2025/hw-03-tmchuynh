@@ -1,24 +1,20 @@
 ---
 title: "HW 03 - Road traffic accidents"
-author: "Your Name"
+author: "Tina Huynh"
 output: 
-  tufte::tufte_html:
-    css: ../hw.css
-    tufte_variant: "envisioned"
-    highlight: pygments
   pdf_document:
-  latex_engine:xelatex
-  toc:true
-  number_sections:true
-  fig_caption:true
-  citation_package:natbib
-  keep_tex:true
+    latex_engine: xelatex
+    toc: true
+    number_sections: true
+    fig_caption: true
+    citation_package: natbib
+    keep_tex: true
 link-citations: true
 ---
 
 ```{r include = FALSE}
 knitr::opts_chunk$set(
-  eval = FALSE,
+  eval = TRUE,
   out.width = "80%",
   fig.asp = 0.618,
   fig.width = 10,
@@ -34,9 +30,7 @@ In this assignment we'll look at traffic accidents in Edinburgh. The data are ma
 
 # Getting started
 
-```{marginfigure}
 **IMPORTANT:** If there is no GitHub repo created for you for this assignment, it means I didn't have your GitHub username as of when I assigned the homework. Please let me know your GitHub username asap, and I can create your repo.
-```
 
 Go to the course GitHub organization and locate your homework repo, which should be named `hw-03-YOUR_GITHUB_USERNAME`. Grab the URL of the repo, and clone it in RStudio. First, open the R Markdown document `hw-03.Rmd` and Knit it. Make sure it compiles without errors. The output will be in the file markdown `.md` file with the same name.
 
@@ -66,17 +60,27 @@ The data can be found in the **dsbox** package, and it's called `accidents`. Sin
 
 1.  How many observations (rows) does the dataset have? Instead of hard coding the number in your answer, use inline code.
 
-```{marginfigure}
-**Tired of typing your password?** Chances are your browser has already saved your password, but if not, you can ask Git to save (cache) your password for a period of time, where you indicate the period of time in seconds. For example, if you want it to cache your password for 1 hour, that would be 3,600 seconds. To do so, run the following *in the Console*: `usethis::use_git_config(credential.helper = "cache --timeout=3600")`. If you want to cache it for a longer time, you can adjust the number of seconds in the code.
-```
+The dataset contains `r nrow(accidents)` observations.
 
-1.  Run `View(accidents)` in your Console to view the data in the data viewer. What does each row in the dataset represent?
+**Tired of typing your password?** Chances are your browser has already saved your password, but if not, you can ask Git to save (cache) your password for a period of time, where you indicate the period of time in seconds. For example, if you want it to cache your password for 1 hour, that would be 3,600 seconds. To do so, run the following *in the Console*: `usethis::use_git_config(credential.helper = "cache --timeout=3600")`. If you want to cache it for a longer time, you can adjust the number of seconds in the code.
+
+2.  Run `View(accidents)` in your Console to view the data in the data viewer. What does each row in the dataset represent?
+
+Each row in the dataset represents a distinct traffic accident that occurred in Edinburgh in 2018. Each accident entry includes detailed information about the time and location of the incident, weather and road conditions at the time, the severity of the accident, and various characteristics of the vehicles and casualties involved.
+
+```{r explore-data, echo=FALSE}
+# Let's examine the structure of the data
+glimpse(accidents)
+
+# Summary of key variables
+summary(accidents)
+```
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
 
 3.  Recreate the following plot, and describe in context of the data. In your answer, don't forget to label your R chunk as well (where it says `label-me-1`). Your label should be short, informative, shouldn't include spaces, and shouldn't shouldn't repeat a previous label.
 
-```{r label-me-1, eval = TRUE, echo = FALSE, fig.fullwidth = TRUE}
+```{r time_severity_plot, eval = TRUE, fig.fullwidth = TRUE}
 accidents %>%
   mutate(day_of_week_type = if_else(day_of_week %in% c("Saturday", "Sunday"), "Weekend", "Weekday")) %>%
   ggplot(aes(x = time, fill = severity)) +
@@ -93,13 +97,80 @@ accidents %>%
   )
 ```
 
+The density plot above reveals critical temporal patterns in Edinburgh's traffic accidents, comparing weekday and weekend incidents by time of day and severity. 
+
+On weekdays, the data shows two prominent accident peaks: one during the morning rush hour (approximately 8-9 AM) and a larger, more sustained peak during the afternoon/evening commute (3-6 PM). This bimodal distribution strongly correlates with typical commuting patterns, suggesting that traffic congestion during work commutes significantly contributes to accident frequency. Notably, the afternoon peak is more pronounced and extends over a longer period, potentially reflecting the less synchronized nature of evening commutes compared to morning ones.
+
+Weekend accident patterns differ substantially, with accidents more evenly distributed throughout the day and reaching their highest frequency in the afternoon and early evening hours. The absence of a morning peak on weekends reflects the reduced early-day traffic when commuting pressures are absent. Instead, the gradual increase in accidents throughout the day likely corresponds to increased leisure travel, shopping activities, and potentially social events later in the day.
+
+Regarding severity, "Slight" accidents (indicated in purple) constitute the majority of incidents across both weekday and weekend periods. However, "Serious" accidents (shown in green-blue) maintain a relatively consistent proportion throughout the day. Fatal accidents, while rare, do not show a clear temporal pattern in this visualization, which is expected given their fortunately infrequent occurrence.
+
+The overall lower density of weekend accidents compared to weekday incidents suggests that commuter traffic significantly influences accident rates in Edinburgh. This comprehensive temporal analysis provides valuable insights for traffic management authorities, who might consider targeted safety measures during high-risk periods, particularly weekday commuting hours when accident densities reach their peak.
+
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
 
 4.  Create another data visualization based on these data and interpret it. You can choose any variables and any type of visualization you like, but it must have at least three variables, e.g. a scatterplot of x vs. y isn't enough, but if points are colored by z, that's fine. In your answer, don't forget to label your R chunk as well (where it says `label-me-2`).
 
-```{r label-me-2, eval = TRUE, echo = FALSE, fig.fullwidth = TRUE}
+```{r weather_speed_severity, eval = TRUE, fig.fullwidth = TRUE}
+# First, examine the speed limit and weather distributions
+accidents %>%
+  count(speed_limit) %>%
+  arrange(desc(n))
 
+accidents %>%
+  count(weather) %>%
+  arrange(desc(n))
 
+# Filter out the very infrequent categories for clearer visualization
+accidents_filtered <- accidents %>%
+  filter(weather %in% c("Fine + no high winds", "Raining + no high winds", "Fine + high winds", "Raining + high winds")) %>%
+  mutate(
+    weather_type = case_when(
+      str_detect(weather, "Fine") ~ "Fine",
+      str_detect(weather, "Rain") ~ "Rainy",
+      TRUE ~ weather
+    ),
+    wind_condition = if_else(str_detect(weather, "high winds"), "High winds", "No high winds"),
+    speed_category = case_when(
+      speed_limit <= 20 ~ "20 mph or less",
+      speed_limit <= 30 ~ "30 mph",
+      speed_limit <= 40 ~ "40 mph",
+      TRUE ~ ">40 mph"
+    ),
+    speed_category = factor(speed_category, levels = c("20 mph or less", "30 mph", "40 mph", ">40 mph"))
+  )
+
+# Create visualization of weather conditions, speed limits, and accident severity
+ggplot(accidents_filtered, aes(x = speed_category, fill = severity)) +
+  geom_bar(position = "fill") +
+  facet_grid(weather_type ~ wind_condition) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(
+    title = "Proportion of Accident Severity by Speed Limit and Weather Conditions",
+    subtitle = "Edinburgh Traffic Accidents, 2018",
+    x = "Speed Limit Category",
+    y = "Proportion of Accidents",
+    fill = "Accident Severity"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank(),
+    legend.position = "bottom"
+  )
 ```
+
+This visualization examines the relationship between speed limits, weather conditions, and accident severity in Edinburgh's 2018 traffic incidents, revealing several noteworthy patterns with significant road safety implications.
+
+The analysis reveals that roads with higher speed limits consistently demonstrate greater proportions of serious and fatal accidents across all weather conditions. This progressive relationship is particularly evident in the 40 mph and >40 mph categories, where the proportion of severe outcomes increases substantially compared to lower-speed zones. This pattern aligns with established traffic safety principles that higher speeds generate greater kinetic energy during collisions, resulting in more severe injuries.
+
+Weather conditions exhibit a complex influence on accident severity. Fine weather without high winds shows relatively consistent severity distributions across speed categories, likely reflecting "baseline" accident patterns. However, the introduction of high winds significantly alters this pattern, particularly in higher speed zones. In 40 mph zones during fine weather with high winds, the proportion of serious accidents increases noticeably compared to the same speed zones without high winds. This suggests that wind conditions may compromise vehicle stability or driver control, especially at higher speeds.
+
+Rainy conditions demonstrate an interesting pattern: they generally show higher proportions of slight accidents in the 30 mph zones compared to fine weather. This counterintuitive finding may reflect adaptive behavior, where drivers exercise greater caution during visible adverse conditions, potentially reducing accident severity despite increased occurrence. However, when rain combines with high winds in 20 mph or less zones, we observe a notably higher proportion of serious accidents, indicating that this combination of adverse conditions may be particularly hazardous in city centers and residential areas with lower speed limits.
+
+The data shows few fatal accidents across all categories, making pattern identification difficult for this severity level. However, their relative absence in the 20 mph or less zones across all weather conditions reinforces the safety benefits of lower urban speed limits.
+
+These findings have significant implications for traffic management policy. They suggest that speed limit reductions could be particularly beneficial during adverse weather conditions, and that warning systems for high wind conditions might be especially important on higher-speed roadways. The data also supports the continued implementation of 20 mph zones in urban areas, which consistently show the lowest proportion of serious and fatal accidents across all weather conditions analyzed.
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards and review the md document on GitHub to make sure you're happy with the final state of your work.* Once you decide that you are done with the lab, choose the knit drop down and select `Knit to tufte_handout` to generate a pdf. Download and submit that pdf to Canvas.
