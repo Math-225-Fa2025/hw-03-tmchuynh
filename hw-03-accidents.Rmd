@@ -6,6 +6,13 @@ output:
     css: ../hw.css
     tufte_variant: "envisioned"
     highlight: pygments
+  pdf_document:
+  latex_engine:xelatex
+  toc:true
+  number_sections:true
+  fig_caption:true
+  citation_package:natbib
+  keep_tex:true
 link-citations: true
 ---
 
