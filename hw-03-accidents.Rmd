@@ -70,10 +70,7 @@ Each row in the dataset represents a distinct traffic accident that occurred in 
 
 ```{r explore-data, echo=FALSE}
 # Let's examine the structure of the data
-glimpse(accidents)
-
-# Summary of key variables
-summary(accidents)
+View(accidents)
 ```
 
 🧶 ✅ ⬆️ Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
